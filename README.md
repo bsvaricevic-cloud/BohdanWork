@@ -1,11 +1,12 @@
 import asyncio
 import aiosqlite
+import os
 from aiogram import Bot, Dispatcher, types
 from aiogram.filters import CommandStart
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-TOKEN = "8631237572:AAEq2Llkp2ZwVfHql_Y4nQ38JqGa0uxuyQY"
+TOKEN = os.getenv("TOKEN")
 
 bot = Bot(token=TOKEN)
 dp = Dispatcher()
@@ -156,7 +157,7 @@ async def link(message: types.Message):
     await message.answer(f"https://t.me/{bot_info.username}?start={message.from_user.id}")
 
 
-# 🔔 НАГАДУВАННЯ
+# 🔔 Нагадування
 async def reminder():
     async with aiosqlite.connect(DB_NAME) as db:
         cur = await db.execute("SELECT user_id, invited_today FROM invites")
@@ -167,14 +168,14 @@ async def reminder():
                 try:
                     await bot.send_message(
                         user_id,
-                        f"⚠️ Ти не виконав денну норму!\n"
+                        f"⚠️ Ти не виконав норму!\n"
                         f"Залишилось: {DAILY_NORM - today} людей"
                     )
                 except:
                     pass
 
 
-# 🌙 СКИДАННЯ
+# 🌙 Скидання дня
 async def reset_day():
     async with aiosqlite.connect(DB_NAME) as db:
         cur = await db.execute("SELECT user_id, invited_today FROM invites")
@@ -198,6 +199,7 @@ scheduler.start()
 async def main():
     await init_db()
     await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     asyncio.run(main())

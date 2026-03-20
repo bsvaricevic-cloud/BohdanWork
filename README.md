@@ -6,19 +6,21 @@ from aiogram.filters import CommandStart
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-TOKEN = os.getenv("8631237572:AAGBinKR1cmV01p4D5UdXTq5HEaGtcd6cjs")
+# Використовуємо змінну оточення для безпеки
+TOKEN = os.getenv("8512057548:AAGXTagRc2J4PVnlV_sJ_iqr606qH7Duc08")
 
-bot = Bot(token=8631237572:AAGBinKR1cmV01p4D5UdXTq5HEaGtcd6cjs)
+bot = Bot(token=TOKEN)
 dp = Dispatcher()
 
 DB_NAME = "bot.db"
 
-DAILY_NORM = 10
-REWARD = 80
-MIN_BALANCE = 10000
-MIN_DAYS = 10
+DAILY_NORM = 10        # щоденна норма запрошених
+REWARD = 80            # грн за одного запрошеного
+MIN_BALANCE = 10000    # мінімальна сума для виводу
+MIN_DAYS = 10          # мінімальна кількість робочих днів
 
 
+# 📋 Меню
 menu = ReplyKeyboardMarkup(
     keyboard=[
         [KeyboardButton(text="📊 Статистика")],
@@ -29,6 +31,7 @@ menu = ReplyKeyboardMarkup(
 )
 
 
+# 🗄️ Ініціалізація бази
 async def init_db():
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute("""
@@ -57,6 +60,7 @@ async def init_db():
         await db.commit()
 
 
+# 👤 Реєстрація нового користувача
 async def register(user_id):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute("INSERT OR IGNORE INTO users (user_id) VALUES (?)", (user_id,))
@@ -64,6 +68,7 @@ async def register(user_id):
         await db.commit()
 
 
+# 🚀 Старт бота
 @dp.message(CommandStart())
 async def start(message: types.Message):
     user_id = message.from_user.id
@@ -71,6 +76,7 @@ async def start(message: types.Message):
 
     await register(user_id)
 
+    # Лінк із рефералом
     if len(args) > 1:
         ref_id = int(args[1])
 
@@ -113,6 +119,7 @@ async def start(message: types.Message):
     await message.answer("👋 Вітаю!", reply_markup=menu)
 
 
+# 📊 Статистика
 @dp.message(lambda msg: msg.text == "📊 Статистика")
 async def stats(message: types.Message):
     user_id = message.from_user.id
@@ -133,6 +140,7 @@ async def stats(message: types.Message):
     )
 
 
+# 💸 Вивід коштів
 @dp.message(lambda msg: msg.text == "💸 Вивести кошти")
 async def withdraw(message: types.Message):
     user_id = message.from_user.id
@@ -151,6 +159,7 @@ async def withdraw(message: types.Message):
         )
 
 
+# 🔗 Реферальне посилання
 @dp.message(lambda msg: msg.text == "🔗 Моє посилання")
 async def link(message: types.Message):
     bot_info = await bot.get_me()
@@ -168,7 +177,7 @@ async def reminder():
                 try:
                     await bot.send_message(
                         user_id,
-                        f"⚠️ Ти не виконав норму!\n"
+                        f"⚠️ Ти не виконав денну норму!\n"
                         f"Залишилось: {DAILY_NORM - today} людей"
                     )
                 except:
@@ -184,18 +193,19 @@ async def reset_day():
         for user_id, today in users_list:
             if today >= DAILY_NORM:
                 await db.execute("UPDATE users SET day = day + 1 WHERE user_id=?", (user_id,))
-
             await db.execute("UPDATE invites SET invited_today = 0 WHERE user_id=?", (user_id,))
 
         await db.commit()
 
 
+# ⏰ Планувальник
 scheduler = AsyncIOScheduler()
-scheduler.add_job(reminder, "cron", hour=20)
-scheduler.add_job(reset_day, "cron", hour=0)
+scheduler.add_job(reminder, "cron", hour=20)  # нагадування о 20:00
+scheduler.add_job(reset_day, "cron", hour=0) # скидання о 00:00
 scheduler.start()
 
 
+# ▶️ Запуск бота
 async def main():
     await init_db()
     await dp.start_polling(bot)

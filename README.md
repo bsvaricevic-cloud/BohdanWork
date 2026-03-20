@@ -6,9 +6,9 @@ from aiogram.filters import CommandStart
 from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
-TOKEN = os.getenv("TOKEN")
+TOKEN = os.getenv("8631237572:AAGBinKR1cmV01p4D5UdXTq5HEaGtcd6cjs")
 
-bot = Bot(token=TOKEN)
+bot = Bot(token=8631237572:AAGBinKR1cmV01p4D5UdXTq5HEaGtcd6cjs)
 dp = Dispatcher()
 
 DB_NAME = "bot.db"
